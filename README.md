@@ -27,10 +27,10 @@ A completely serverless meal order-taking / order-placing service that allows us
 
 Overview
 ---
-Step 1: Set up an AWS Lambda function to run lambdacron
-Step 2: Place lambdacron jobs as JSON files in your chosen S3 bucket
-Step 3: Lambdacron periodically checks the job bucket and run jobs based on the details in the JSON
-Step 4: To remove a lambdacron job, just delete the associated JSON file from S3
+* Step 1: Set up an AWS Lambda function to run lambdacron
+* Step 2: Place lambdacron jobs as JSON files in your chosen S3 bucket
+* Step 3: Lambdacron periodically checks the job bucket and run jobs based on the details in the JSON
+* Step 4: To remove a lambdacron job, just delete the associated JSON file from S3
 
 
 How to install / use
@@ -84,6 +84,7 @@ Example of #3: Assume lambdacron is scheduled to run every 5 minutes, and it run
 Obvious Questions
 ---
 Q: Why not just use AWS's Scheduled Tasks for Lambda mechanism?
+
 A: That mechanism has the following limitations, which lambdacron is intended to address:
    * Maximum of 100 scheduled events per AWS account
    * Events invoke a Lambda function but don't carry meaningful payload
