@@ -1,0 +1,8 @@
+#!/bin/sh
+
+cd lambdacron
+zip -9r ../lambdacron.zip *
+
+cd ..
+cd .env/lib/python3.6/site-packages
+zip -9r ../../../../lambdacron.zip * --exclude "*.pyc" "boto*" "pip*" "docutils*" "setuptools*" "wheel*" "pkg_resources*" "*.dist-info/*" "__pycache_*" "easy_install.py"

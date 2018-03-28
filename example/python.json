@@ -1,0 +1,10 @@
+{
+  "when": "* * * * * * *",
+  "max_number_executions": 0,
+  "run": {
+    "type": "python",
+    "details": {
+      "script": "import json\n\ndata = {\"hello\": \"world\"}\n\nprint(json.dumps(data))\n\nfor x in range(1,10):\n    print(x)\n"
+    }
+  }
+}

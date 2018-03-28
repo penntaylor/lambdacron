@@ -1,0 +1,111 @@
+#! /usr/bin/env python3
+
+import json
+from optparse import OptionParser
+import subprocess
+
+
+
+parser = OptionParser()
+parser.add_option("-c", "--create", dest="create", action="store_true", default=False, help="")
+(options, args) = parser.parse_args()
+
+
+conf = {}
+
+with open("config.json") as f:
+    conf = json.loads(f.read())
+
+lbucket = conf["lambda_bucket"]
+lcbucket = conf["lambdacron_bucket"]
+lcprefix = conf["lambdacron_prefix"]
+lcinterval = conf["lambdacron_interval_minutes"]
+fnname = conf["lambdacron_functionname"]
+rulename = conf["lambdacron_rulename"]
+iamrole = conf["lambdacron_iamrolearn"]
+
+PKGNAME = "lambdacron.zip"
+
+print("Building package")
+subprocess.run(["./package"])
+
+print("Sending package to S3")
+subprocess.run(["aws", "s3", "cp", PKGNAME,
+                "s3://{}/{}".format(lbucket, PKGNAME)])
+
+if options.create:
+    print("Create lambda function")
+    lr = subprocess.run(["aws", "lambda", "create-function",
+                         "--function-name", fnname,
+                         "--runtime", "python3.6",
+                         "--role", iamrole,
+                         "--handler", "lambdacron.lambda_handler",
+                         "--code", "S3Bucket={},S3Key={}".format(lcbucket, PKGNAME)],
+                        stdout=subprocess.PIPE)
+
+else:
+    print("Updating lambda code details")
+    lr = subprocess.run(["aws", "lambda", "update-function-code",
+                         "--function-name", fnname,
+                         "--s3-bucket", lbucket,
+                         "--s3-key", PKGNAME],
+                        stdout=subprocess.PIPE)
+
+print(lr.stdout)
+
+lambdaarn = json.loads(lr.stdout)["FunctionArn"]
+
+print("Updating lambda configuration")
+ur = subprocess.run(["aws", "lambda", "update-function-configuration",
+                     "--function-name", fnname,
+                     "--environment",
+                     ("Variables={{LAMBDACRON_BUCKET={},LAMBDACRON_PREFIX={},LAMBDACRON_INTERVAL={}}}".
+                     format(lcbucket, lcprefix, lcinterval)),
+                     "--runtime", "python3.6",
+                     "--timeout", "60"],
+                    stdout=subprocess.PIPE)
+
+print(ur.stdout)
+
+print("Setting event rule")
+rr = subprocess.run(["aws", "events", "put-rule",
+                     "--name", rulename,
+                     "--schedule-expression", "rate({} minutes)".format(lcinterval)],
+                    stdout=subprocess.PIPE)
+
+# Returns JSON like this:
+# {
+#     "RuleArn": "arn:aws:events:us-east-1:12345678901234:rule/my-rule-name"
+# }
+
+print(rr.stdout)
+
+rulearn = json.loads(rr.stdout)["RuleArn"]
+
+if options.create:
+    print("Attaching lambda InvokeFunction permissions to event rule")
+    pr = subprocess.run(["aws", "lambda", "add-permission",
+                         "--function-name", fnname,
+                         "--statement-id", "lambdacron-trigger-event",
+                         "--action", "lambda:InvokeFunction",
+                         "--principal", "events.amazonaws.com",
+                         "--source-arn", rulearn],
+                        stdout=subprocess.PIPE)
+
+    print(pr.stdout)
+
+
+
+target = [{"Id": "1",
+           "Arn": lambdaarn}]
+
+with open("targets.json", "w+") as f:
+    f.write(json.dumps(target))
+
+print("Attaching lambda function to event rule")
+fr = subprocess.run(["aws", "events", "put-targets",
+                     "--rule", rulename,
+                     "--targets", "file://targets.json"],
+                    stdout=subprocess.PIPE)
+
+print(fr.stdout)

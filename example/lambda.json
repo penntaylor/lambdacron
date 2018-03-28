@@ -1,0 +1,13 @@
+{
+  "when": "* * * * * * *",
+  "max_number_executions": 0,
+  "run": {
+    "type": "lambda",
+    "details": {
+      "arn": "arn_of_lambda_function",
+      "payload": {
+        "stuff": "goes here"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "when": "* * * * * * *",
+  "max_number_executions": 0,
+  "run": {
+    "type": "command",
+    "details": {
+      "command": [
+        "ls",
+        "-Fal"
+      ]
+    }
+  }
+}

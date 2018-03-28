@@ -1,0 +1,9 @@
+{
+    "lambda_bucket": "Bucket to hold lambda function deployment zip",
+    "lambdacron_bucket": "Bucket to hold cron jobs",
+    "lambdacron_prefix": "Prefix (directory) for cron jobs; should end in /",
+    "lambdacron_interval_minutes": 10,
+    "lambdacron_functionname": "Name to give lambdacron Lambda function",
+    "lambdacron_rulename": "rule name for master interval trigger",
+    "lambdacron_iamrolearn": "IAM role ARN to use when running lambdacron Lambda"
+}
